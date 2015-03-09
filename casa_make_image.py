@@ -1,23 +1,21 @@
 #!/usr/bin/env python
-#Why not /usr/bin/python ... see: http://goo.gl/KFjTo
 
 #
-# casapy --nogui --nologger --log2term -c casa_make_image.py
+# casapy --nogui --nologger --log2term -c casa_make_image.py <vis>
 #
 
 default(clean)
 
-name='test_1'
-vis=name + '.ms'
+vis=sys.argv[-1]
 imagename=name
 niter = 0
-imsize=4096
+imsize=2048
 #! cell=['9.0arcsec']
 cell=['12.0arcsec']
-#! Enable w-projection by having the following 3 lines.
-gridmode='widefield'
-wprojplanes=32
-imagename+='_wproj_%03i_%03i' % (wprojplanes, imsize)
+#! Enable w-projection by including the following 3 lines.
+#gridmode='widefield'
+#wprojplanes=128
+#imagename+='_wproj_%03i_%03i' % (wprojplanes, imsize)
 
 t0 = time.time()
 go()

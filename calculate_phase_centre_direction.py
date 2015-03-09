@@ -100,10 +100,10 @@ def plot_pointing_az_el(pointing_file):
     ax.set_aspect("equal")
 
     # Draw cube
-    r = [-1, 1]
-    for s, e in combinations(np.array(list(product(r,r,r))), 2):
-        if np.sum(np.abs(s-e)) == r[1]-r[0]:
-            ax.plot3D(*zip(s,e), color="b")
+    # r = [-1, 1]
+    # for s, e in combinations(np.array(list(product(r,r,r))), 2):
+    #     if np.sum(np.abs(s-e)) == r[1]-r[0]:
+    #         ax.plot3D(*zip(s,e), color="b")
 
     # Draw sphere
     u, v = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
@@ -211,7 +211,7 @@ if __name__ == '__main__':
         (t0_year, t0_month, t0_day, t0_hour, t0_min, t0_sec)
     min_el = 60
     npointings = 2
-    ntimesobs  = 5
+    ntimesobs  = 51
     obs_length_days = 6.0/24.0
     outfile = os.path.join('data', 'pointings.txt')
     # -----------------------------------------------------------------
