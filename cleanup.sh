@@ -1,0 +1,12 @@
+rm -f  *.pyc
+rm -f  casapy*.log
+rm -f  ipython*.log
+rm -f  pointing*.txt
+rm -f  pointing*.png
+rm -f  oskar*.log
+#rm -rf test.ms
+#rm -rf test.vis
+rm -rf IMG*
+rm -f  *.last
+#rm -rf data
+#rm -f *.png

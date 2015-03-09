@@ -1,0 +1,15 @@
+
+
+* Visualise (movie?) uvw plane coordinates of each observation.
+* Number of frequency channels?
+* Data format?
+    - Data size? (1GB) vs number of correlator dumps?
+* Convert setup.ini to scripts
+    - Image visibilities for a range of widefield imaging options in CASA
+    - Speed up image testing by using im tool rather than CLEAN?
+        - Verify the output for 4.3
+        - Record imaging timings for various widefield options.
+* Run on cambridge HPC rather than laptop...
+* Create short document on the simulations (PDF or webpage. - SDP wiki?)
+* Better source position generation ? (if approx L shape isn't ok)
+* Range of times and pointings to give reasonable UVW coverage

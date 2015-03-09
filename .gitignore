@@ -1,0 +1,6 @@
+*.ms
+*.fits
+*.vis
+*.flux
+*.model
+*.residual
