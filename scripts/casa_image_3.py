@@ -12,15 +12,17 @@ for documentation of methods on CASA objects 'im' and 'ia'
 import os
 import time
 import sys
+import shutil
+
 
 # -------------------------------------
 ms = os.path.basename(os.path.abspath(sys.argv[-1]))
 image_root_name = os.path.splitext(ms)[0]
-# im_size = [8192, 32768]
-im_size = [1024, 1024]
-cell_size = ['0.75arcsec', '0.75arcsec']
-w_planes = 256
+im_size = [512, 512]
+cell_size = ['2.0arcsec', '2.0arcsec']
+w_planes = 0
 make_psf = False
+grid_function = 'SF'  # SF | BOX
 # -------------------------------------
 
 im.open(ms, usescratch=False, compress=False)
@@ -29,9 +31,14 @@ im.defineimage(nx=im_size[0], ny=im_size[1],
                stokes='I', mode='mfs', step=1, spw=[-1], outframe='',
                veltype='radio')
 im.weight(type='natural')
-im.setoptions(ftmachine='wproject', wprojplanes=w_planes, gridfunction='SF',
-              padding=1.2, dopbgriddingcorrections=True,
-              applypointingoffsets=False)
+if w_planes > 0:
+    im.setoptions(ftmachine='wproject', wprojplanes=w_planes,
+                  gridfunction=grid_function,
+                  padding=1.2, dopbgriddingcorrections=True,
+                  applypointingoffsets=False)
+else:
+    im.setoptions(ftmachine='ft', gridfunction=grid_function, padding=1.2,
+                  dopbgriddingcorrections=True, applypointingoffsets=False)
 dirty_image = image_root_name + '_dirty'
 t0 = time.time()
 print '*' * 80
@@ -46,7 +53,10 @@ im.close()
 ia.open(dirty_image + '.img')
 ia.tofits(dirty_image + '.fits', overwrite=True)
 ia.close()
+shutil.rmtree(dirty_image + '.img')
+
 if make_psf:
     ia.open(psf_image + '.img')
     ia.tofits(psf_image + '.fits', overwrite=True)
     ia.close()
+    shutil.rmtree(psf_image + '.img')

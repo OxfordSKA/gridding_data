@@ -4,3 +4,5 @@
 *.flux
 *.model
 *.residual
+venv
+.idea
