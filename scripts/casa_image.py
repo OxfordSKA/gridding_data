@@ -14,8 +14,9 @@ import time
 import sys
 
 # -------------------------------------
-ms = os.path.basename(os.path.abspath(sys.argv[-1]))
-image_root_name = os.path.splitext(ms)[0]
+ms_path = os.path.abspath(sys.argv[-1])
+ms_name = os.path.basename(ms_path)
+image_root_name = os.path.splitext(ms_name)[0]
 # im_size = [8192, 32768]
 im_size = [1024, 1024]
 cell_size = ['0.75arcsec', '0.75arcsec']
@@ -23,7 +24,12 @@ w_planes = 256
 make_psf = False
 # -------------------------------------
 
-im.open(ms, usescratch=False, compress=False)
+
+print '=' * 80
+print 'ms = %s' % ms_path
+print '=' * 80
+
+im.open(ms_path, usescratch=False, compress=False)
 im.defineimage(nx=im_size[0], ny=im_size[1],
                cellx=cell_size[0], celly=cell_size[1],
                stokes='I', mode='mfs', step=1, spw=[-1], outframe='',
