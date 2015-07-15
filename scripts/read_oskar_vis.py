@@ -5,6 +5,7 @@ import sys
 import struct
 import collections
 import numpy
+import os
 
 
 class OskarBinary(object):
@@ -38,10 +39,12 @@ class OskarBinary(object):
 
     def __init__(self, file_name):
         """Constructor."""
+        if not os.path.exists(file_name):
+            raise RuntimeError('Specified visibility file not found!')
         self.file_name = file_name
         self.file_handle = open(file_name)
         self.bin_ver = 0
-        self.data = collections.OrderedDict()
+        self.record = collections.OrderedDict()
         self.read()
 
     def __del__(self):
@@ -93,17 +96,17 @@ class OskarBinary(object):
         index = struct.unpack('i', f.read(4))[0]
         block_size = struct.unpack('l', f.read(8))[0]
 
-        if group not in self.data:
-            self.data[group] = collections.OrderedDict()
-        if tag not in self.data[group]:
-            self.data[group][tag] = collections.OrderedDict()
-        if index not in self.data[group][tag]:
-            self.data[group][tag][index] = collections.OrderedDict()
+        if group not in self.record:
+            self.record[group] = collections.OrderedDict()
+        if tag not in self.record[group]:
+            self.record[group][tag] = collections.OrderedDict()
+        if index not in self.record[group][tag]:
+            self.record[group][tag][index] = collections.OrderedDict()
 
-        block = self.data[group][tag][index]
-        block['group'] = block_size
-        block['tag'] = block_size
-        block['index'] = block_size
+        block = self.record[group][tag][index]
+        block['group'] = group
+        block['tag'] = tag
+        block['index'] = index
         block['number'] = block_index
         block['element_size'] = element_size
         block['chunk_flags'] = chunk_flags
@@ -177,6 +180,25 @@ class OskarBinary(object):
         block['data_length'] = n
         block['data'] = numpy.squeeze(data)
 
+        if (self.is_set(block['data_type'], self.DataType.Double) or
+                self.is_set(block['data_type'], self.DataType.Single)) \
+                and block['data'].shape != ():
+            assert len(block['data'].shape) == 1, \
+                'Unexpected Matrix like block data shape detected ' \
+                '@ block number %i id:(%i.%i.%i)' % (block['number'],
+                                                     block['group'],
+                                                     block['tag'],
+                                                     block['index'])
+            # Convert complex data to python complex type
+            if self.is_set(block['data_type'], self.DataType.Complex):
+                block['data'] = numpy.array([complex(v[0], v[1]) for v
+                                             in block['data'].reshape(n / 2, 2)
+                                             ])
+                block['block_length'] = n / 2
+            # Wrap matrix data into 2 x 2 blocks.
+            if self.is_set(block['data_type'], self.DataType.Matrix):
+                block['data'] = block['data'].reshape(n / 4, 2, 2)
+
         if block['flag_crc']:
             # TODO(BM) implement CRC check. e.g. http://goo.gl/IfyyOO
             f.read(4)
@@ -198,30 +220,30 @@ class OskarBinary(object):
     def date_time(self):
         gid = self.Group.Standard
         tid = self.Standard.DateTime
-        if gid in self.data and tid in self.data[gid]:
-            assert len(self.data[gid][tid]) == 1, \
+        if gid in self.record and tid in self.record[gid]:
+            assert len(self.record[gid][tid]) == 1, \
                 'Expecting only one standard group, date-time tag!'
-            return self.data[gid][tid][0]['data']
+            return self.record[gid][tid][0]['data']
 
     def user(self):
         gid = self.Group.Standard
         tid = self.Standard.UserName
-        if gid in self.data and tid in self.data[gid]:
-            assert len(self.data[gid][tid]) == 1, \
+        if gid in self.record and tid in self.record[gid]:
+            assert len(self.record[gid][tid]) == 1, \
                 'Expecting only one standard group, user tag!'
-            return self.data[gid][tid][0]['data']
+            return self.record[gid][tid][0]['data']
 
     def settings(self):
         gid = self.Group.Settings
         tid = self.Settings.File
-        if gid in self.data and tid in self.data[gid]:
-            assert len(self.data[gid][tid]) == 1, \
+        if gid in self.record and tid in self.record[gid]:
+            assert len(self.record[gid][tid]) == 1, \
                 'Expecting only one standard group, settings tag!'
-            return self.data[gid][tid][0]['data']
+            return self.record[gid][tid][0]['data']
 
     def print_summary(self):
-        for group_id in self.data:
-            group_data = self.data[group_id]
+        for group_id in self.record:
+            group_data = self.record[group_id]
             for tag_id in group_data:
                 tag_data = group_data[tag_id]
                 for index in tag_data:
@@ -282,7 +304,7 @@ class OskarVis(OskarBinary):
                              "can be read by this class.")
 
         # Make local copies of visibility header variables.
-        vis_header = self.data[self.Group.VisHeader]
+        vis_header = self.record[self.Group.VisHeader]
         assert len(vis_header) == 26, \
             'Expecting the visibility header to have 26 tags!'
         self.block_length = vis_header[self.VisHeader.MaxTimes][0]['data']
@@ -299,6 +321,7 @@ class OskarVis(OskarBinary):
 
     def uvw(self, flatten=False):
         # FIXME(BM) handle channels?
+        # FIXME(BM) uvw coordinates when auto-correlations are present.
         group = self.Group.VisBlock
         tag_uu = self.VisBlock.UU
         tag_vv = self.VisBlock.VV
@@ -307,7 +330,7 @@ class OskarVis(OskarBinary):
         vv = numpy.empty((self.num_baselines, self.num_times), dtype='f8')
         ww = numpy.empty((self.num_baselines, self.num_times), dtype='f8')
         for index in range(0, self.num_blocks):
-            block_dims = self.data[group][self.VisBlock.Dims][index]['data']
+            block_dims = self.record[group][self.VisBlock.Dims][index]['data']
             block_times = block_dims[2]
             block_time_start = block_dims[0]
             block_baselines = block_dims[4]
@@ -315,23 +338,47 @@ class OskarVis(OskarBinary):
                 "Data dimension mismatch"
             assert block_times <= self.block_length, \
                 "Invalid block length ?!."
-            uu_block = self.data[group][tag_uu][index]['data']
+            uu_block = self.record[group][tag_uu][index]['data']
             uu_block = uu_block[0:block_baselines * block_times]
             uu_block = uu_block.reshape((block_baselines, block_times))
             uu[:, block_time_start:block_time_start + block_times] = uu_block
-            vv_block = self.data[group][tag_vv][index]['data']
+            vv_block = self.record[group][tag_vv][index]['data']
             vv_block = vv_block[0:block_baselines * block_times]
             vv_block = vv_block.reshape((block_baselines, block_times))
             vv[:, block_time_start:block_time_start + block_times] = vv_block
-            ww_block = self.data[group][tag_ww][index]['data']
+            ww_block = self.record[group][tag_ww][index]['data']
             ww_block = ww_block[0:block_baselines * block_times]
             ww_block = ww_block.reshape((block_baselines, block_times))
             ww[:, block_time_start:block_time_start + block_times] = ww_block
+        # FIXME(BM): The data starts flat so if flatten, just dont reshape?
         if flatten:
             uu = uu.flatten()
             vv = vv.flatten()
             ww = ww.flatten()
         return uu, vv, ww
+
+    def amplitudes(self, flatten=False):
+        group = self.Group.VisBlock
+        tag = self.VisBlock.CrossCorrelation
+        amp = numpy.empty((self.num_baselines, self.num_times), dtype='c16')
+        for index in range(0, self.num_blocks):
+            block_dims = self.record[group][self.VisBlock.Dims][index]['data']
+            block_time_start = block_dims[0]
+            block_times = block_dims[2]
+            block_baselines = block_dims[4]
+            assert block_baselines == self.num_baselines, \
+                "Data dimension mismatch"
+            assert block_times <= self.block_length, \
+                "Invalid block length ?!."
+            amp_block = self.record[group][tag][index]['data']
+            amp_block = amp_block[0:block_baselines * block_times]
+            amp_block = amp_block.reshape((block_baselines, block_times))
+            amp[:, block_time_start:block_time_start + block_times] = amp_block
+        # FIXME(BM): The data starts flat so if flatten, just don't reshape?
+        if flatten:
+            amp = amp.flatten()
+        return amp
+
 
 
     def print_summary(self):
@@ -339,8 +386,8 @@ class OskarVis(OskarBinary):
         print 'No. channels  : %i' % self.num_channels
         print 'No. baselines : %i' % self.num_baselines
         return
-        for group_id in self.data:
-            group_data = self.data[group_id]
+        for group_id in self.record:
+            group_data = self.record[group_id]
             for tag_id in group_data:
                 tag_data = group_data[tag_id]
                 for index in tag_data:
@@ -359,27 +406,34 @@ class OskarVis(OskarBinary):
                     print ''
 
 
-if __name__ == "__main__":
-
-    if not len(sys.argv) == 2:
-        print 'Usage: $ python read_oskar_vis.py <filename>'
-        sys.exit(1)
-
-    file_name = sys.argv[1]
-
-    vis = OskarVis(file_name)
-    # vis.print_summary()
-    # print vis.date_time()
-    # print vis.user()
-    # print vis.settings()
-    # vis.print_summary()
-    # #print vis.num_blocks()
-
-    uu, vv, ww = vis.uvw(flatten=True)
-    import matplotlib.pyplot as plt
-    uu = numpy.concatenate((uu, -uu))
-    vv = numpy.concatenate((vv, -vv))
-    plt.plot(uu, vv, '.')
-    plt.show()
+# if __name__ == "__main__":
+#
+#     if not len(sys.argv) == 2:
+#         print 'Usage: $ python read_oskar_vis.py <filename>'
+#         sys.exit(1)
+#
+#     file_name = sys.argv[1]
+#
+#     vis = OskarVis(file_name)
+#     # vis.print_summary()
+#     # print vis.date_time()
+#     # print vis.user()
+#     # print vis.settings()
+#     # vis.print_summary()
+#     # #print vis.num_blocks()
+#
+#     uu, vv, ww = vis.uvw(flatten=True)
+#         amp = vis.amplitudes(flatten=True)
+#
+#     # import matplotlib.pyplot as plt
+#     # uv_dist = numpy.sqrt(uu**2 + vv**2)
+#     # plt.plot(uv_dist, numpy.abs(amp), '.')
+#     # plt.show()
+#
+#     # import matplotlib.pyplot as plt
+#     # uu = numpy.concatenate((uu, -uu))
+#     # vv = numpy.concatenate((vv, -vv))
+#     # plt.plot(uu, vv, '.')
+#     # plt.show()
 
 
