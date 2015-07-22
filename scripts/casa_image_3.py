@@ -13,19 +13,34 @@ import os
 import time
 import sys
 import shutil
+import math
+
+
+def fov_to_cell_size(fov, im_size):
+    fov_rad = fov * math.pi / 180.
+    r_max = math.sin(fov_rad / 2.)
+    inc = r_max / (0.5 * im_size)
+    return math.asin(inc) * ((180. * 3600.) / math.pi)
 
 
 # -------------------------------------
-ms = os.path.basename(os.path.abspath(sys.argv[-1]))
-image_root_name = os.path.splitext(ms)[0]
-im_size = [512, 512]
-cell_size = ['2.0arcsec', '2.0arcsec']
+ms_path = os.path.abspath(sys.argv[-1])
+ms_name = os.path.basename(ms_path)
+image_root_name = os.path.splitext(ms_path)[0]
+size = 4096
+fov = 3.0  # deg
+cell = fov_to_cell_size(fov, size)  # arcsec
+im_size = [size, size]
+cell_size = ['%.10farcsec' % cell, '%.10farcsec' % cell]
 w_planes = 0
 make_psf = False
 grid_function = 'SF'  # SF | BOX
 # -------------------------------------
 
-im.open(ms, usescratch=False, compress=False)
+if not os.path.isdir(ms_path):
+    raise RuntimeError('Specified MS not found!')
+
+im.open(ms_path, usescratch=False, compress=False)
 im.defineimage(nx=im_size[0], ny=im_size[1],
                cellx=cell_size[0], celly=cell_size[1],
                stokes='I', mode='mfs', step=1, spw=[-1], outframe='',

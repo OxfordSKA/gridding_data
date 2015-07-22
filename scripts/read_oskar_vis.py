@@ -379,7 +379,14 @@ class OskarVis(OskarBinary):
             amp = amp.flatten()
         return amp
 
-
+    def frequency(self, channel=0):
+        group = self.Group.VisHeader
+        tag = self.VisHeader.StartFrequency
+        index = 0
+        start_freq = self.record[group][tag][index]['data']
+        tag = self.VisHeader.FrequencyIncrement
+        freq_inc = self.record[group][tag][index]['data']
+        return start_freq + channel * freq_inc
 
     def print_summary(self):
         print 'No. times     : %i' % self.num_times

@@ -1,3 +1,4 @@
+*.pyc
 *.ms
 *.fits
 *.vis
@@ -6,3 +7,5 @@
 *.residual
 venv
 .idea
+data_set_2
+test_data_3

@@ -5,6 +5,7 @@ import collections
 import os
 import numpy as np
 import subprocess
+import sys
 
 
 def create_sky_model(file_name, ra, dec, stokes_i):
@@ -65,7 +66,7 @@ def create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times, ra0,
     return s
 
 
-def main():
+def main(output_path):
     """."""
     dtype = [('ra', 'f8'), ('dec', 'f8'), ('date-time', 'a25'),
              ('mjd', 'f8'), ('az', 'f8'), ('el', 'f8')]
@@ -76,19 +77,21 @@ def main():
     pointing_idx = 0
     ra0 = pointing['ra'][pointing_idx]
     dec0 = pointing['dec'][pointing_idx]
-    sky_file = 'test.osm'
+    sky_file = os.path.join(output_path, 'test.osm')
     freq_hz = 500.e6
     start_time_mjd = pointing['mjd'][pointing_idx]
-    # t_acc = 5.0  # seconds
-    num_times = 43
+    num_times = 100
     t_acc = (6.0 * 3600.0) / float(num_times)  # seconds
-    vis_name = 'test_vla'
-    ini = 'test.ini'
+    vis_name = os.path.join(output_path, 'test_vla')
+    ini = os.path.join(output_path, 'test.ini')
     # ----------------------------------------
 
-    ra = [ra0, ra0 + 0.05, ra0 + 0.18, ra0 + 0.3]
-    dec = [dec0, dec0 + 0.05, dec0, dec0 - 0.1]
+    ra = [ra0, ra0 + 0.05, ra0 + 0.18, ra0 + 0.3, ra0, ra0, ra0]
+    dec = [dec0, dec0 + 0.05, dec0, dec0 - 0.1, dec0 + 0.25, dec0 + 0.4,
+           dec0 + 1.0]
+    print len(ra), len(dec)
     flux = np.ones((len(ra),), dtype='f8')
+    flux[-1] = 3.0
     create_sky_model(sky_file, ra, dec, flux)
     s = create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times,
                         ra0, dec0, vis_name)
@@ -97,4 +100,9 @@ def main():
     subprocess.call(["oskar_sim_interferometer", ini])
 
 if __name__ == '__main__':
-    main()
+
+    output_path = os.path.abspath(sys.argv[1])
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    main(output_path)
