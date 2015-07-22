@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
 """Module to difference two FITS images."""
+
+import pyfits
+import sys
+import os
+import numpy as np
+import argparse
 
 
 def save_fits_image(filename, data, header, img1=None, img2=None):
     """Save a FITS image."""
-    import pyfits
+
     # Reshape to add the frequency axis
     data = np.reshape(data, (1, 1, data.shape[0], data.shape[1]))
     new_hdr = pyfits.header.Header()
@@ -19,35 +26,39 @@ def save_fits_image(filename, data, header, img1=None, img2=None):
         new_hdr.append(('HISTORY', '-' * 60))
         new_hdr.append(('HISTORY', '' * 60))
 
-    if (os.path.exists(filename)):
-        print '+ WARNING, output FITS file already exsits, overwriting.'
+    if os.path.exists(filename):
+        print '+ WARNING, output FITS file already exists, overwriting.'
         os.remove(filename)
     pyfits.writeto(filename, data, new_hdr)
 
 
 def load_fits_image(filename):
     """Load a FITS image."""
-    import pyfits
-    hdulist = pyfits.open(filename)
-    data = hdulist[0].data
-    hdr = hdulist[0].header
+    hdu_list = pyfits.open(filename)
+    data = hdu_list[0].data
+    hdr = hdu_list[0].header
     return np.squeeze(data), hdr
 
 
 if __name__ == '__main__':
-    import sys
-    import os
-    import numpy as np
 
-    if len(sys.argv) - 1 != 3:
-        print 'Usage: fits_diff.py <diff name> <file1> <file2>'
-        print ''
-        print 'Performs: diff = file1 - file2'
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Difference FITS images.'
+                                                 'Performs the difference, '
+                                                 'diff = file1 - file2.')
+    parser.format_help()
+    parser.add_argument("file1", help="FITS image 1",
+                        type=str)
+    parser.add_argument("file2", help="FITS image 2",
+                        type=str)
+    parser.add_argument('--out_name', '-o',
+                        help='Output diff FITS image. (default: diff.fits)',
+                        default='diff.fits',
+                        type=str)
+    args = parser.parse_args()
 
-    outname = sys.argv[1]
-    file1 = sys.argv[2]
-    file2 = sys.argv[3]
+    out_name = args.out_name
+    file1 = args.file1
+    file2 = args.file2
 
     f1, h1 = load_fits_image(file1)
     f2, h2 = load_fits_image(file2)
@@ -59,7 +70,7 @@ if __name__ == '__main__':
     print '+ File 1      : %s' % file1
     print '+ File 2      : %s' % file2
     print '+ Diff        : file1 - file2'
-    print '+ Output name : %s' % (outname)
+    print '+ Output name : %s' % out_name
     print '+ Diff stats:'
     print '  - Max       : % .3e' % np.max(diff)
     print '  - Min       : % .3e' % np.min(diff)
@@ -68,4 +79,4 @@ if __name__ == '__main__':
     print '  - RMS       : % .3e' % np.sqrt(np.mean(diff**2))
     print '-' * 80
 
-    save_fits_image(outname, diff, h1, file1, file2)
+    save_fits_image(out_name, diff, h1, file1, file2)
