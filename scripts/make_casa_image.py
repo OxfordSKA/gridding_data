@@ -17,24 +17,26 @@ import math
 
 
 def fov_to_cell_size(fov, im_size):
-    fov_rad = fov * math.pi / 180.
-    r_max = math.sin(fov_rad / 2.)
+    r_max = math.sin(math.radians(fov) / 2.)
     inc = r_max / (0.5 * im_size)
-    return math.asin(inc) * ((180. * 3600.) / math.pi)
+    return math.degrees(math.asin(inc)) * 3600.
 
 
 # -------------------------------------
 ms_path = os.path.abspath(sys.argv[-1])
 ms_name = os.path.basename(ms_path)
 image_root_name = os.path.splitext(ms_path)[0]
-size = 4096
-fov = 3.0  # deg
+size = 4096 * 4
+fov = 3.5  # deg
 cell = fov_to_cell_size(fov, size)  # arcsec
 im_size = [size, size]
 cell_size = ['%.10farcsec' % cell, '%.10farcsec' % cell]
-w_planes = 0
+w_planes = 256
 make_psf = False
 grid_function = 'SF'  # SF | BOX
+new_phase_centre=False
+ra0 = -90.3545848760
+dec0 = -11.1711239906
 # -------------------------------------
 
 if not os.path.isdir(ms_path):
@@ -45,6 +47,14 @@ im.defineimage(nx=im_size[0], ny=im_size[1],
                cellx=cell_size[0], celly=cell_size[1],
                stokes='I', mode='mfs', step=1, spw=[-1], outframe='',
                veltype='radio')
+if new_phase_centre:
+    im.defineimage(nx=im_size[0], ny=im_size[1],
+                   cellx=cell_size[0], celly=cell_size[1],
+                   stokes='I', mode='mfs', step=1, spw=[-1], outframe='',
+                   veltype='radio', phasecenter=me.direction('J2000',
+                                                             '%.14fdeg' % ra0,
+                                                             '%.14fdeg' % dec0)
+
 im.weight(type='natural')
 if w_planes > 0:
     im.setoptions(ftmachine='wproject', wprojplanes=w_planes,
@@ -54,7 +64,7 @@ if w_planes > 0:
 else:
     im.setoptions(ftmachine='ft', gridfunction=grid_function, padding=1.2,
                   dopbgriddingcorrections=True, applypointingoffsets=False)
-dirty_image = image_root_name + '_dirty'
+dirty_image = image_root_name + '_dirty_%05i_w%03i' % (size, w_planes)
 t0 = time.time()
 print '*' * 80
 print '* Starting imaging...'
@@ -62,7 +72,7 @@ im.makeimage(image=dirty_image + '.img', type='observed', verbose=True)
 print '* Time taken to make dirty image = %.3f s' % (time.time() - t0)
 print '*' * 80
 if make_psf:
-    psf_image = image_root_name + '_psf'
+    psf_image = image_root_name + '_psf_%05i_w%03i' % (size, w_planes)
     im.makeimage(image=psf_image + '.img', type='psf', verbose=True)
 im.close()
 ia.open(dirty_image + '.img')

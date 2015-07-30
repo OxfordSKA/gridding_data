@@ -45,7 +45,8 @@ def main(vis_file, support, over_sample, fov, im_size):
     # num_vis = 1
     # uvw = np.empty((num_vis, 3), dtype='f8')
     # vis = np.ones((num_vis,), dtype='c16')
-    # uvw[0, :] = [500, 500, 0]
+    # # uvw[0, :] = [500, 500, 0]
+    # uvw[0, :] = [0, 0, 0]
 
     t0 = time.time()
     gcf = GriddingConvolutionFunction(support, over_sample)
@@ -66,7 +67,7 @@ def main(vis_file, support, over_sample, fov, im_size):
     print 'FFT took = %.3f s' % (time.time() - t0)
 
     t0 = time.time()
-    image.grid_correct(gcf)
+    # image.grid_correct(gcf)
     print 'Grid correct took = %.3f s' % (time.time() - t0)
 
     return grid, image, gcf
@@ -87,12 +88,12 @@ def run_profile(vis_file, support, over_sample, fov, im_size):
 if __name__ == '__main__':
     parser = MyParser(description='Test imaging script.')
     parser.format_help()
-    plot_modes = ['grid', 'image', 'gcf']
+    plot_modes = ['none', 'grid', 'image', 'gcf']
     parser.add_argument('-p', metavar='MODE',
                         help='Space separated list of plot mode(s). Allowed '\
                              'values are: ' + ', '.join(plot_modes) + '.',
                         choices=plot_modes,
-                        default=plot_modes[1],
+                        default=plot_modes[2],
                         nargs='+',
                         type=str)
     parser.add_argument('--prof', help='Run profile.',
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     support = 5
     over_sample = 63
     fov = 3.0  # deg
-    im_size = 4096
+    im_size = 2048
     # ------------------------------------------------------------------------
 
     if args.prof:

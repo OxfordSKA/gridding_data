@@ -34,12 +34,12 @@ def create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times, ra0,
     """."""
     s = collections.OrderedDict()
     s['simulator/'] = {
-        'max_sources_per_chunk': 20,
+        'max_sources_per_chunk': 1000,
         'double_precision': 'true',
         'keep_log_file': 'false'
     }
     s['sky/'] = {
-        # 'oskar_sky_model/file': sky_file,
+        #'oskar_sky_model/file': sky_file
         'generator/grid/side_length': 10,
         'generator/grid/fov_deg': 3,
         'generator/grid/mean_flux_jy': 1
@@ -56,8 +56,9 @@ def create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times, ra0,
     s['telescope/'] = {
         'longitude_deg': -107.6184,
         'latitude_deg': 34.0790,
-        'input_directory': os.path.join('models', 'VLA_A.tm'),
-        'pol_mode': 'Scalar',
+        'input_directory': os.path.join('models',
+                                        'ska1_meerkat_mid_combined_july_2015.tm'),
+        'pol_mode': 'Full',
         'station_type': 'Isotropic beam'
     }
     s['interferometer/'] = {
@@ -85,7 +86,7 @@ def main(output_path):
     start_time_mjd = pointing['mjd'][pointing_idx]
     num_times = 100
     t_acc = (6.0 * 3600.0) / float(num_times)  # seconds
-    vis_name = os.path.join(output_path, 'test_vla')
+    vis_name = os.path.join(output_path, 'test_ska')
     ini = os.path.join(output_path, 'test.ini')
     # ----------------------------------------
 
@@ -94,7 +95,6 @@ def main(output_path):
            dec0 + 1.0]
     print len(ra), len(dec)
     flux = np.ones((len(ra),), dtype='f8')
-    flux[-1] = 3.0
     create_sky_model(sky_file, ra, dec, flux)
     s = create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times,
                         ra0, dec0, vis_name)

@@ -5,6 +5,7 @@
 import numpy as np
 import math
 
+
 def fov_to_cell_size(fov, im_size):
     """Evaluate image pixel size for given FoV and number of pixels.
 
@@ -15,18 +16,16 @@ def fov_to_cell_size(fov, im_size):
     Returns:
         double: pixel size, in arcsec.
     """
-    fov_rad = fov * math.pi / 180.
-    r_max = math.sin(fov_rad / 2.)
+    r_max = math.sin(math.radians(fov) / 2.)
     inc = r_max / (0.5 * im_size)
-    return math.asin(inc) * ((180. * 3600.) / math.pi)
+    return math.degrees(math.asin(inc)) * 3600.0
 
 
 def cell_size_to_fov(cell_size, im_size):
     """Obtain image fov from cell size and image size."""
-    cell_rad = (cell_size * math.pi) / (3600. * 180.)
-    inc = math.sin(cell_rad)
+    inc = math.sin(math.radians(cell_size / 3600.0))
     r_max = inc * (0.5 * im_size)
-    return 2.0 * math.asin(r_max) * (180. / math.pi)
+    return math.degrees(2.0 * math.asin(r_max))
 
 
 class GriddingConvolutionFunction:
@@ -50,8 +49,8 @@ class GriddingConvolutionFunction:
         p1 = 1.0 / width
         p2 = 2.0
         x, y = self.coord_grid()
-        arg_x = np.power(np.abs(x) * p1, p2)
-        arg_y = np.power(np.abs(y) * p1, p2)
+        arg_x = (np.abs(x) * p1)**p2
+        arg_y = (np.abs(y) * p1)**p2
         self.data *= np.exp(-(arg_x + arg_y))
 
     def pillbox_2d(self, width=1.0):
@@ -78,14 +77,6 @@ class GriddingConvolutionFunction:
         """."""
         self.sinc_2d()
         self.exponential_2d(2.0)  # FIXME(BM) exp_2d cpar1, cpar2 etc...
-
-    def kaiser(self, dk, W, alpha):
-        beta = np.pi * np.sqrt((W**2 / alpha / alpha) * (alpha - 0.5)**2 - 0.8)
-        # temp3 =
-
-    def w_projection_lm(self, w, cell_size_lm):
-        pass
-
 
     def coord_grid(self):
         """Evaluate the GCF coordinate grid in pixel space."""
@@ -146,6 +137,18 @@ class Image:
         distributed visibility measurements.'
         """
         # TODO(BM) use padding rather than sampling of the GCF onto the grid.??
+        # TODO(BM) use analytical FT pairs!
+        pad_width = self.data.shape[0] - gcf.num_cells
+        print 'xxx', pad_width, pad_width/2
+        print np.arange(0, gcf.num_cells)
+        print 63/2
+        k_idx = np.arange(0, gcf.num_cells) * gcf.over_sample + gcf.over_sample / 2
+        k = gcf.data[k_idx, k_idx]
+        print '--', k.shape
+        print gcf.num_cells, gcf.over_sample, gcf.data.shape
+        # k = np.pad(gcf.data, pad_width=(pad_size, ), mode='constant',
+        #             constant_values=(0.0,))
+
         k = np.zeros(self.data.shape, dtype='f8')
         for j in range(0, gcf.num_cells):
             ky = j * gcf.over_sample + gcf.over_sample / 2
