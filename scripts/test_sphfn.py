@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 def test1():
     """."""
-    support = 5
+    support = 6
     over_sample = 100
-    exponent_id = 4
+    exponent_id = 3
 
     width = support * 2 + 1
     size = width * over_sample
@@ -34,6 +34,7 @@ def test1():
                                       gridding=False)
 
     gcf[0:centre] = gcf[:centre-1:-1]
+    gcf[0:centre] = gcf[:centre-1:-1]
     correction[0:centre] = correction[:centre-1:-1]
 
     x = numpy.linspace(-1.0, 1.0, size)
@@ -41,12 +42,12 @@ def test1():
     fig = plt.figure(figsize=(10, 10))
 
     ax = fig.add_subplot(211)
-    ax.plot(x, gcf, 'r-')
+    ax.semilogy(x, gcf, 'r-')
     ax.grid()
     ax.set_title('GCF')
 
     ax = fig.add_subplot(212)
-    ax.plot(x, correction, 'b-')
+    ax.semilogy(x, correction, 'b-')
     ax.grid()
     ax.set_title('correction')
 

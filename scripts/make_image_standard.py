@@ -4,6 +4,7 @@
 
 import numpy as np
 import math
+import sphfn
 
 
 def fov_to_cell_size(fov, im_size):
@@ -77,6 +78,12 @@ class GriddingConvolutionFunction:
         """."""
         self.sinc_2d()
         self.exponential_2d(2.0)  # FIXME(BM) exp_2d cpar1, cpar2 etc...
+
+    def sphfn(self, exponent_id):
+        """."""
+        support = self.support
+        over_sample = self.over_sample
+
 
     def coord_grid(self):
         """Evaluate the GCF coordinate grid in pixel space."""

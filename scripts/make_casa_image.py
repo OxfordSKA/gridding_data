@@ -26,15 +26,15 @@ def fov_to_cell_size(fov, im_size):
 ms_path = os.path.abspath(sys.argv[-1])
 ms_name = os.path.basename(ms_path)
 image_root_name = os.path.splitext(ms_path)[0]
-size = 4096 * 4
+size = 4096
 fov = 3.5  # deg
 cell = fov_to_cell_size(fov, size)  # arcsec
 im_size = [size, size]
 cell_size = ['%.10farcsec' % cell, '%.10farcsec' % cell]
-w_planes = 256
+w_planes = 0.0
 make_psf = False
 grid_function = 'SF'  # SF | BOX
-new_phase_centre=False
+new_phase_centre = False
 ra0 = -90.3545848760
 dec0 = -11.1711239906
 # -------------------------------------
@@ -51,9 +51,9 @@ if new_phase_centre:
     im.defineimage(nx=im_size[0], ny=im_size[1],
                    cellx=cell_size[0], celly=cell_size[1],
                    stokes='I', mode='mfs', step=1, spw=[-1], outframe='',
-                   veltype='radio', phasecenter=me.direction('J2000',
-                                                             '%.14fdeg' % ra0,
-                                                             '%.14fdeg' % dec0)
+                   veltype='radio',
+                   phasecenter=me.direction('J2000', '%.14fdeg' % ra0,
+                                            '%.14fdeg' % dec0))
 
 im.weight(type='natural')
 if w_planes > 0:

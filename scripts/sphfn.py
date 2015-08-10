@@ -157,15 +157,15 @@ def sphfn(eta, exponent_id, support, gridding=True):
                 x * q6u[1, j]))
         else:
             x = eta2 - 0.5625
-            psi = (p6l[1, j] + x * (p6l[2, j] + x * (p6l[3, j] +
-                x * (p6l[4, j] + x * p6l[5, j])))) / (1.0 + x * (q6l[1, j] +
-                x * q6l[2, j]))
+            psi = (p6l[0, j] + x * (p6l[1, j] + x * (p6l[2, j] +
+                x * (p6l[3, j] + x * p6l[4, j])))) / (1.0 + x * (q6l[0, j] +
+                x * q6l[1, j]))
     elif support == 7:
         if math.fabs(eta) > 0.775:
             x = eta2 - 1.0
             psi = (p7u[0, j] + x * (p7u[1, j] + x * (p7u[2, j] +
-                x * (p7u[3, j] + x * p7u[4, j])))) / (1.0 + x * (q7u[1, j] +
-                x * q7u[2, j]))
+                x * (p7u[3, j] + x * p7u[4, j])))) / (1.0 + x * (q7u[0, j] +
+                x * q7u[1, j]))
         else:
             x = eta2 - 0.600625
             psi = (p7l[0, j] + x * (p7l[1, j] + x * (p7l[2, j] +

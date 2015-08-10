@@ -105,11 +105,11 @@ if __name__ == '__main__':
     plot_modes = args.p if isinstance(args.p, list) else [args.p]
 
     # ------------------------------------------------------------------------
-    vis_file = os.path.abspath(os.path.join('test_data_3', 'test_vla.vis'))
+    vis_file = os.path.abspath(os.path.join('ska1_6h_scalar', 'test_ska.vis'))
     support = 5
     over_sample = 63
-    fov = 3.0  # deg
-    im_size = 2048
+    fov = 3.5  # deg
+    im_size = 4096
     # ------------------------------------------------------------------------
 
     if args.prof:

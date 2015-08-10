@@ -118,7 +118,7 @@ def w_gcf(im_size, over_sample, cell_size_arcsec, w, taper_width=0.15):
     # plt.colorbar()
     # plt.show()
 
-    # Pad and FFT.
+    # Pad and FFT.4,
     pad_size = im_size
     # FIXME pad_width adds gcf_size pixels to each side of the image.
     # so pad size == im_size over sample of 3?
@@ -311,7 +311,7 @@ if __name__ == '__main__':
 
     p1 = 1.0 / 1.0
     p1 = 2.0
-    p2 = 2.0
+    p2 = 3.0
     buffer_size = (2 * param[0] + 1) * int(linc)
     buffer = np.zeros((buffer_size,), dtype='f8')
     buffer_u = np.zeros((buffer_size,), dtype='f8')

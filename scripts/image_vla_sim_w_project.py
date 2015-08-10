@@ -33,7 +33,7 @@ def load_vis(vis_file):
     return uvw, vis
 
 
-def w_gcf(w, size, fov, over_sample, taper_width=0.15, cut_level=0.1):
+def w_gcf(w, size, fov, over_sample, taper_width=0.3, cut_level=0.1):
     """Generate w-projection GCF.
 
     Args:
@@ -50,10 +50,10 @@ def w_gcf(w, size, fov, over_sample, taper_width=0.15, cut_level=0.1):
         3. FT to the uv-plane.
         4. Cut to given level to generate a smaller kernel.
     """
-    plot_w_lm = False
-    plot_w_uv_raw = False
-    plot_cut_debug = False
-    plot_w_uv_final = True
+    plot_w_lm = True
+    plot_w_uv_raw = True
+    plot_cut_debug = True
+    plot_w_uv_final = False
 
     t0 = time.time()
 
@@ -64,8 +64,11 @@ def w_gcf(w, size, fov, over_sample, taper_width=0.15, cut_level=0.1):
     l = x * math.radians(cell_size / 3600.)
     m = y * math.radians(cell_size / 3600.)
     r2 = l**2 + m**2
-
-    # Image plane w-projection kernel. TODO(BM) use better function for this.
+    print size
+    print w
+    print math.radians(cell_size / 3600.)
+    print np.max(r2)
+    # Image plane w-projection kernel.
     w_lm = np.exp(-1.j * 2. * w * np.pi * (np.sqrt(1. - r2) - 1.))
 
     # Add a taper. (TODO replace with better anti-aliasing function)
@@ -77,13 +80,16 @@ def w_gcf(w, size, fov, over_sample, taper_width=0.15, cut_level=0.1):
 
     # Plot the image plane kernel.
     if plot_w_lm:
+        extent=[np.min(l), np.max(l), np.min(m), np.max(m)]
         fig = plt.figure(figsize=(20, 8))
         fig.add_subplot(121, aspect='equal')
-        plt.imshow(np.real(w_lm), interpolation='nearest', cmap=parula_map)
+        plt.imshow(np.real(w_lm), interpolation='nearest', extent=extent,
+                   cmap=parula_map)
         plt.colorbar()
         plt.title('Real(Image plane w-kernel), w=%.3f' % w, fontsize='x-small')
         fig.add_subplot(122, aspect='equal')
-        plt.imshow(np.imag(w_lm), interpolation='nearest', cmap=parula_map)
+        plt.imshow(np.imag(w_lm), interpolation='nearest',
+                   extent=extent, cmap=parula_map)
         plt.title('Imag(Image plane w-kernel), w=%.3f' % w, fontsize='x-small')
         plt.colorbar()
         plt.show()
@@ -97,16 +103,16 @@ def w_gcf(w, size, fov, over_sample, taper_width=0.15, cut_level=0.1):
                     constant_values=(0.0,))
 
     # # Plot the image plane kernel.
-    # fig = plt.figure(figsize=(20, 8))
-    # fig.add_subplot(121, aspect='equal')
-    # plt.imshow(np.real(w_lm[size/2-10:size/2+10, size/2-10:size/2+10]), interpolation='nearest', cmap=parula_map)
-    # plt.colorbar()
-    # plt.title('old', fontsize='x-small')
-    # fig.add_subplot(122, aspect='equal')
-    # plt.imshow(np.real(gcf_uv[new_centre-10:new_centre+10, new_centre-10:new_centre+10]), interpolation='nearest', cmap=parula_map)
-    # plt.title('new', fontsize='x-small')
-    # plt.colorbar()
-    # plt.show()
+    fig = plt.figure(figsize=(20, 8))
+    fig.add_subplot(121, aspect='equal')
+    plt.imshow(np.real(w_lm), interpolation='nearest', cmap=parula_map)
+    plt.colorbar()
+    plt.title('old', fontsize='x-small')
+    fig.add_subplot(122, aspect='equal')
+    plt.imshow(np.real(gcf_uv), interpolation='nearest', cmap=parula_map)
+    plt.title('new', fontsize='x-small')
+    plt.colorbar()
+    plt.show()
 
     # gcf_uv = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(gcf_uv)))
     gcf_uv[::2, :] *= -1
@@ -312,12 +318,14 @@ def grid_data(uvw, vis, gcf, support, over_sample, cell_size_uv_m,
 
 def main():
     # Inputs ------------------------------------------------------------------
-    vis_file = 'test_data_3/test_vla.vis'
-    w_planes = 32
+    vis_file = 'old_data/test_data_3/test_vla.vis'
+    w_planes = 128
     im_size = 4096
-    fov = 2.0  # deg
+    fov = 30.0  # deg
+    T2 = 0.06
+    fov = 2. * math.degrees(T2)
     gcf_size = 256
-    over_sample = 3
+    over_sample = 4
     # -------------------------------------------------------------------------
 
     print '-' * 80
@@ -335,14 +343,14 @@ def main():
                                                              time.time() - t0)
     print ''
 
+
     grid = np.zeros((im_size, im_size), dtype='c16')
     cell_size_lm_arcsec = fov_to_cell_size(fov, im_size)
     cell_size_uv_m = grid_cell_size(cell_size_lm_arcsec, im_size)
     print 'cell size uv : %f [m]' % cell_size_uv_m
-    #
-    # b = w_planes / 2
-    # b_gcf, support = w_gcf(w_bin[b]['mean_w'], gcf_size, fov, over_sample)
 
+    b_gcf, support = w_gcf(10000, gcf_size, fov, over_sample)
+    return
     # Grid one w-plane at a time.
     print 'WARNING:'
     print 'WARNING: There is a bug BUG due to symmetry of the w-kernel?'

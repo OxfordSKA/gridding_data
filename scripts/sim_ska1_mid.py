@@ -40,7 +40,7 @@ def create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times, ra0,
     }
     s['sky/'] = {
         #'oskar_sky_model/file': sky_file
-        'generator/grid/side_length': 10,
+        'generator/grid/side_length': 11,
         'generator/grid/fov_deg': 3,
         'generator/grid/mean_flux_jy': 1
     }
@@ -58,7 +58,7 @@ def create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times, ra0,
         'latitude_deg': 34.0790,
         'input_directory': os.path.join('models',
                                         'ska1_meerkat_mid_combined_july_2015.tm'),
-        'pol_mode': 'Full',
+        'pol_mode': 'Scalar',
         'station_type': 'Isotropic beam'
     }
     s['interferometer/'] = {
@@ -84,18 +84,12 @@ def main(output_path):
     sky_file = os.path.join(output_path, 'test.osm')
     freq_hz = 500.e6
     start_time_mjd = pointing['mjd'][pointing_idx]
-    num_times = 100
-    t_acc = (6.0 * 3600.0) / float(num_times)  # seconds
+    num_times = 10
+    t_acc = (6. * 3600.) / float(num_times)  # seconds
     vis_name = os.path.join(output_path, 'test_ska')
     ini = os.path.join(output_path, 'test.ini')
     # ----------------------------------------
 
-    ra = [ra0, ra0 + 0.05, ra0 + 0.18, ra0 + 0.3, ra0, ra0, ra0]
-    dec = [dec0, dec0 + 0.05, dec0, dec0 - 0.1, dec0 + 0.25, dec0 + 0.4,
-           dec0 + 1.0]
-    print len(ra), len(dec)
-    flux = np.ones((len(ra),), dtype='f8')
-    create_sky_model(sky_file, ra, dec, flux)
     s = create_settings(sky_file, freq_hz, start_time_mjd, t_acc, num_times,
                         ra0, dec0, vis_name)
     dict_to_ini(s, ini)
