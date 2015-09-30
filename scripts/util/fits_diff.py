@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Module to difference two FITS images."""
+#!venv/bin/python
 
 import pyfits
-import sys
 import os
 import numpy as np
 import argparse
-
 
 def save_fits_image(filename, data, header, img1=None, img2=None):
     """Save a FITS image."""

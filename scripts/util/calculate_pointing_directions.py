@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """Calculate phase centre directions.
 
 Usage:
@@ -14,20 +13,22 @@ if __name__ == '__main__':
     # -------------------------------------------------------------------------
     # Telescope position
     # VLA
-    lon0 = -107.6184
-    lat0 = 34.0790
-
+    # lon0 = -107.6184
+    # lat0 = 34.0790
+    # SKA mid SA
+    lon0 = 21.442909
+    lat0 = -30.739475
     alt = 0.0
     # Initial start datetime (note: hour and minute is randomly generated)
-    t0_year = 2015
-    t0_month = 7
-    t0_day = 10
+    t0_year = 2022
+    t0_month = 1
+    t0_day = 0
     t0_sec = 0
-    # Minumum elevation at the higest point.
+    # Minimum elevation at the highest point.
     min_el = 75
     # Number of pointings to generate.
     num_pointings = 10
-    outfile = os.path.join('pointings.txt')
+    outfile = os.path.join('pointings_ska1_mid.txt')
     seed = 1
     # -------------------------------------------------------------------------
 
