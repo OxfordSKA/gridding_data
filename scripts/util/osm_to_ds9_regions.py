@@ -25,7 +25,7 @@ def angular_distance(ra0, dec0, RA, Dec):
 def create_region_file(filename, reg_file):
     """."""
     # Read the OSM file
-    osm_data = np.loadtxt(filename)
+    osm_data = np.loadtxt(filename, delimiter=',')
 
     coords = osm_data[:, 0:2]
 
