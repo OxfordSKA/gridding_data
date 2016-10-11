@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#SBATCH -p tesla
+#SBATCH -J gridding_data
+#SBATCH -A SKA-SDP-GPU
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --time=01:00:00
+#SBATCH --no-requeue
+
+#! Load modules ###############################################################
+. /etc/profile.d/modules.sh
+module purge
+module load default-wilkes
+module load use.own
+module load oskar/master
+
+#! Command to run #############################################################
+# Usage:
+#  $ sbatch slurm_generate_data.wilkes <args>
+#  where args:
+#  1. start channel
+#  2. number of channels
+#
+cmd="python generate_data.py $1 $2"
+
+#! GO #########################################################################
+workdir="$SLURM_SUBMIT_DIR"
+JOBID=$SLURM_JOB_ID
+cd "$workdir"
+echo "-------------------------------------------------------------------------"
+echo "Outdir           : $1"
+echo "Channel          : $2"
+echo "Command          : $cmd"
+echo "Directory        : $(pwd)."
+echo "JobID            : $JOBID"
+echo "Time             : $(date)"
+echo "Node             : $(hostname)"
+echo "-------------------------------------------------------------------------"
+T0="$(date +%s)"
+eval "$cmd"
+T1="$(($(date +%s)-T0))"
+echo "-------------------------------------------------------------------------"
+echo "Total run time ${T1} s"
+echo "-------------------------------------------------------------------------"
+

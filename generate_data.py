@@ -43,7 +43,7 @@ def obs_params(longitude_deg, latitude_deg, mid_azimuth_deg, mid_elevation_deg,
 
 def main():
     # Global options.
-    precision = b'double'
+    precision = b'single'
     telescope_model = os.path.join('models', 'SKA1_LOW_v6.tm')
     global_freq_start_hz = 42.5e6
     bandwidth_hz = 5e3
@@ -83,15 +83,16 @@ def main():
     tel.set_phase_centre(ra, dec)
 
     # Set up imagers.
-    imagers = []
-    for i in range(1):
-        imagers.append(oskar.Imager(precision))
-        imagers[i].set(fov_deg=8.0, image_size=8192, algorithm='W-projection')
-        imagers[i].set(channel_snapshots=False, time_snapshots=False)
-        imagers[i].set(output_root=output_root)
+    # imagers = []
+    # for i in range(1):
+    #     imagers.append(oskar.Imager(precision))
+    #     imagers[i].set(fov_deg=8.0, image_size=8192, algorithm='W-projection')
+    #     imagers[i].set(channel_snapshots=False, time_snapshots=False)
+    #     imagers[i].set(output_root=output_root)
 
-    # Set up the imaging simulator.
-    simulator = oskar.ImagingSimulator(imagers, precision)
+    # Set up the simulator.
+    # simulator = oskar.ImagingSimulator(imagers, precision)
+    simulator = oskar.Simulator(precision)
     simulator.set_sky_model(sky)
     simulator.set_telescope_model(tel)
     simulator.set_observation_frequency(freq_start_hz, bandwidth_hz,
@@ -101,7 +102,7 @@ def main():
     simulator.set_max_times_per_block(2)
     simulator.set_horizon_clip(False)
 
-    # Simulate and image.
+    # Run.
     print('Running simulation...')
     start = time.time()
     simulator.run()
