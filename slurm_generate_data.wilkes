@@ -13,6 +13,8 @@
 module purge
 module load default-wilkes
 module load use.own
+module load global
+module load python/2.7.10
 module load oskar/master
 
 #! Command to run #############################################################
@@ -23,14 +25,13 @@ module load oskar/master
 #  2. number of channels
 #
 cmd="python generate_data.py $1 $2"
+# cmd="python -c \"import numpy\""
 
 #! GO #########################################################################
 workdir="$SLURM_SUBMIT_DIR"
 JOBID=$SLURM_JOB_ID
 cd "$workdir"
 echo "-------------------------------------------------------------------------"
-echo "Outdir           : $1"
-echo "Channel          : $2"
 echo "Command          : $cmd"
 echo "Directory        : $(pwd)."
 echo "JobID            : $JOBID"

@@ -43,7 +43,7 @@ def obs_params(longitude_deg, latitude_deg, mid_azimuth_deg, mid_elevation_deg,
 
 def main():
     # Global options.
-    precision = b'single'
+    precision = b'double'
     telescope_model = os.path.join('models', 'SKA1_LOW_v6.tm')
     global_freq_start_hz = 42.5e6
     bandwidth_hz = 5e3
@@ -72,7 +72,6 @@ def main():
     # Set up sky model.
     sky = oskar.Sky.generate_grid(ra, dec, side_length=80, fov_deg=40.0,
                                   precision=precision)
-    sky.save(b'sky_output.osm')
 
     # Set up telescope model.
     tel = oskar.Telescope(precision)
